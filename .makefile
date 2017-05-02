@@ -2,6 +2,10 @@ SOURCES = ig.ml reseau.ml bomberman.ml
 EXEC = bomberman.out
 
 CAMLC = ocamlc
+CAMLOPT = ocamlopt
+CAMLDEP = ocamldep
+CAMLLEX = ocamllex
+CAMLYACC = ocamlyacc
 
 WITHGRAPHICS =graphics.cma
 WITHUNIX =unix.cma
