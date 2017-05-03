@@ -15,6 +15,8 @@ all: depend $(EXEC)
 
 opt : $(EXEC).opt
 
+indent: 
+	ocp-indent --inplace $(SOURCES)
 
 OBJS = $(SOURCES:.ml=.cmo)
 OPTOBJS = $(SOURCES2:.ml=.cmx)
