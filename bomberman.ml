@@ -1,8 +1,7 @@
 open Graphics
+open Gtypes
+open Ig
 
-let size_window = 600
-let size_cell = (size_window/10)
-let radius = (size_cell/2)
 let grille = 
 [|
 	[|'='; '='; '='; '='; '='; '='; '='; '='; '='; '='|];
@@ -17,36 +16,34 @@ let grille =
 	[|'='; '='; '='; '='; '='; '='; '='; '='; '='; '='|];
 		|]
 
-let ouvrir_fenetre n =
-	let taille = Printf.sprintf " %dx%d" n n in
-		open_graph taille;
-		Graphics.auto_synchronize false
+let ouvrir_fenetre =
+	init 92 72 10 10
 
 let dessiner_arene m = 
 	for i = 0 to 9 do
 		for j = 0 to 9 do
 			begin
 				match m.(i).(j) with
-				| ' ' -> 
-				(*set_color white;
-				fill_circle (j*size_cell+radius) (size_window - (i*size_cell+radius)) radius;*)
+				| ' ' -> (*let sprite_sol = in 
+				affiche_sprite sprite_sol;*)
 				print_char ' ';
-				| '=' -> 
-				(*set_color black;
-				fill_circle (j*size_cell+radius) (size_window - (i*size_cell+radius)) radius;*)
+				| '=' -> let sprite_bloc = Bloc {blk_i = i; blk_j = j;  blk_forme = Incassable } in
+					affiche_sprite sprite_bloc;
+					affiche();
 				print_char '=';
-				| 'x' -> 
-				(*set_color red;
-				fill_circle (j*size_cell+radius) (size_window - (i*size_cell+radius)) radius;*)
+				| 'x' -> let sprite_bloc = Bloc {blk_i = i; blk_j = j; blk_forme = Cassable(Intact) } in
+					affiche_sprite sprite_bloc;
+					affiche();
 				print_char 'x';
-				| _ -> set_color yellow;
+				| _ -> ();
 			end
 		done;
 		Printf.printf "\n";
 	done;
-	auto_synchronize(true)
+	synchronize ()
 
 let () =
-	ouvrir_fenetre size_window;
+	auto_synchronize false;
+	ouvrir_fenetre;
 	dessiner_arene grille;
 	ignore (read_key ())
