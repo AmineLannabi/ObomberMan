@@ -56,23 +56,23 @@ let dessiner_arene m  nbJoueur =
     Printf.printf "\n";
   done;
   (match nbJoueur with
-   | 1 -> let joueur1 = Bomberman {x = fst(case_to_coord 2 3);y = snd(case_to_coord 2 3);couleur = Bleu;dir = Sud;etat = Vivant;pas = None} in 
+   | 1 -> let joueur1 = Bomberman {x = fst(case_to_coord 7 3);y = snd(case_to_coord 7 3);couleur = Bleu;dir = Sud;etat = Vivant;pas = None} in 
      affiche_sprite joueur1;
-   | 2 -> let joueur1 = Bomberman {x = fst(case_to_coord 2 3);y = snd(case_to_coord 2 3);couleur = Bleu;dir = Sud;etat = Vivant;pas = None} in 
+   | 2 -> let joueur1 = Bomberman {x = fst(case_to_coord 7 3);y = snd(case_to_coord 7 3);couleur = Bleu;dir = Sud;etat = Vivant;pas = None} in 
      affiche_sprite joueur1;
-     let joueur2 = Bomberman {x = fst(case_to_coord 4 5);y = snd(case_to_coord 4 5);couleur = Rouge;dir = Sud;etat = Vivant;pas = None} in 
+     let joueur2 = Bomberman {x = fst(case_to_coord 5 7);y = snd(case_to_coord 5 7);couleur = Rouge;dir = Sud;etat = Vivant;pas = None} in 
      affiche_sprite joueur2; 
-   | 3 -> let joueur1 = Bomberman {x = fst(case_to_coord 2 3);y = snd(case_to_coord 2 3);couleur = Bleu;dir = Sud;etat = Vivant;pas = None} in 
+   | 3 -> let joueur1 = Bomberman {x = fst(case_to_coord 7 3);y = snd(case_to_coord 7 3);couleur = Bleu;dir = Sud;etat = Vivant;pas = None} in 
      affiche_sprite joueur1;
-     let joueur2 = Bomberman {x = fst(case_to_coord 4 5);y = snd(case_to_coord 4 5);couleur = Rouge;dir = Sud;etat = Vivant;pas = None} in 
+     let joueur2 = Bomberman {x = fst(case_to_coord 5 7);y = snd(case_to_coord 5 7);couleur = Rouge;dir = Sud;etat = Vivant;pas = None} in 
      affiche_sprite joueur2;
-     let joueur3 = Bomberman {x = fst(case_to_coord 6 3);y = snd(case_to_coord 6 3);couleur = Vert;dir = Sud;etat = Vivant;pas = None} in 
+     let joueur3 = Bomberman {x = fst(case_to_coord 1 7);y = snd(case_to_coord 1 7);couleur = Vert;dir = Sud;etat = Vivant;pas = None} in 
      affiche_sprite joueur3; 
-   | 4 -> let joueur1 = Bomberman {x = fst(case_to_coord 2 3);y = snd(case_to_coord 2 3);couleur = Bleu;dir = Sud;etat = Vivant;pas = None} in 
+   | 4 -> let joueur1 = Bomberman {x = fst(case_to_coord 7 3);y = snd(case_to_coord 7 3);couleur = Bleu;dir = Sud;etat = Vivant;pas = None} in 
      affiche_sprite joueur1;
-     let joueur2 = Bomberman {x = fst(case_to_coord 4 5);y = snd(case_to_coord 4 5);couleur = Rouge;dir = Sud;etat = Vivant;pas = None} in 
+     let joueur2 = Bomberman {x = fst(case_to_coord 5 7);y = snd(case_to_coord 5 7);couleur = Rouge;dir = Sud;etat = Vivant;pas = None} in 
      affiche_sprite joueur2;
-     let joueur3 = Bomberman {x = fst(case_to_coord 6 3);y = snd(case_to_coord 6 3);couleur = Vert;dir = Sud;etat = Vivant;pas = None} in 
+     let joueur3 = Bomberman {x = fst(case_to_coord 1 7);y = snd(case_to_coord 1 7);couleur = Vert;dir = Sud;etat = Vivant;pas = None} in 
      affiche_sprite joueur3; 
      let joueur4 = Bomberman {x = fst(case_to_coord 1 2);y = snd(case_to_coord 1 2);couleur = Violet;dir = Sud;etat = Vivant;pas = None} in 
      affiche_sprite joueur4; 
