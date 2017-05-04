@@ -126,6 +126,7 @@ let deplacement coul m l=
          (couleur_to_string coul, !y, !x, "nord") :: bombers;
          (*efface_sprite joueur;*)
          let joueur = build_bomber (couleur_to_string coul, !x, !y, dir_to_string Nord) in
+         efface_sprite joueur;
          affiche_sprite joueur;
        done;
      |  'd' -> let proch_case = prochaine_case !x !y Est in
