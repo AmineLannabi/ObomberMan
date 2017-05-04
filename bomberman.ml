@@ -2,6 +2,7 @@ open Graphics
 open Gtypes
 open Ig
 
+(** declaration de la grille de jeur **)
 let grille = 
   [|
     [|'='; '='; '='; '='; '='; '='; '='; '='; '='; '='|];
@@ -22,19 +23,25 @@ let ouvrir_fenetre () =
 let case_to_coord i j =
   (92/2)+(j*92), (72/2)+(i*72)
 
+let coord_to_case x y =
+  x/92, y/72
+
 let dessiner_arene m  nbJoueur = 
+  (** écriture du(des) joueur(s) à l'origine **)
   (match nbJoueur with
-   | 1 -> Printf.printf "Bleu 1 1 Sud\n";
-   | 2 -> Printf.printf "Bleu 1 1 Sud\n";
-     Printf.printf "Rouge 3 4 Sud\n";
-   | 3 -> Printf.printf "Bleu 1 1 Sud\n";
-     Printf.printf "Rouge 3 4 Sud\n";
-     Printf.printf "Vert 5 7 Sud\n";
-   | 4 -> Printf.printf "Bleu 1 1 Sud\n";
-     Printf.printf "Rouge 3 4 Sud\n";
-     Printf.printf "Vert 5 7 Sud\n";
-     Printf.printf "Violet 6 2 Sud\n";
+   | 1 -> Printf.printf "Bleu 7 3 Sud\n";
+   | 2 -> Printf.printf "Bleu 7 3 Sud\n";
+     Printf.printf "Rouge 5 7 Sud\n";
+   | 3 -> Printf.printf "Bleu 7 3 Sud\n";
+     Printf.printf "Rouge 5 7 Sud\n";
+     Printf.printf "Vert 1 7 Sud\n";
+   | 4 -> Printf.printf "Bleu 7 3 Sud\n";
+     Printf.printf "Rouge 5 7 Sud\n";
+     Printf.printf "Vert 1 7 Sud\n";
+     Printf.printf "Violet 1 2 Sud\n";
    | _ -> Printf.printf "mauvais nombre de joueur\n");
+
+  (** affichage des cases **)
   for i = 0 to 9 do
     for j = 0 to 9 do
       begin
@@ -55,6 +62,8 @@ let dessiner_arene m  nbJoueur =
     done;
     Printf.printf "\n";
   done;
+
+  (** affichage des bombermens **)
   (match nbJoueur with
    | 1 -> let joueur1 = Bomberman {x = fst(case_to_coord 7 3);y = snd(case_to_coord 7 3);couleur = Bleu;dir = Sud;etat = Vivant;pas = None} in 
      affiche_sprite joueur1;
@@ -79,6 +88,50 @@ let dessiner_arene m  nbJoueur =
    | _ -> ());
   affiche();
   synchronize ()
+
+(*let prochaine_case x y dir =
+  match dir with
+  | Nord -> fst(coord_to_case x y)+1, snd(coord_to_case);
+  | Sud -> fst(coord_to_case x y)-1, snd(coord_to_case);
+  | Est -> fst(coord_to_case x y), snd(coord_to_case)+1;
+  | Ouest -> fst(coord_to_case x y), snd(coord_to_case)-1;
+  | _ -> ()
+
+  let deplacement joueur m =
+  let x = joueur.x in
+  let y = joueur.y in
+  if touche_pressee() then
+    (match lecture_touche() with
+     |  'z' -> let proch_case = prochaine case x y Nord in
+       while (m.(fst(proch_case).snd(proch_case)) === ' ')
+       do
+         efface_sprite joueur;
+         joueur.x = fst(proch_case);
+         affiche_sprite joueur;
+       done;
+     |  'd' -> let proch_case = prochaine case x y Est in
+       while (m.(fst(proch_case).snd(proch_case)) === ' ')
+       do
+         efface_sprite joueur;
+         joueur.y = snd(proch_case);
+         affiche_sprite joueur;
+       done;
+     |  'q' -> let proch_case = prochaine case x y Ouest in
+       while (m.(fst(proch_case).snd(proch_case)) === ' ')
+       do
+         efface_sprite joueur;
+         joueur.y = snd(proch_case);
+         affiche_sprite joueur;
+       done;
+     |  's' -> let proch_case = prochaine case x y Sud in
+       while (m.(fst(proch_case).snd(proch_case)) === ' ')
+       do
+         efface_sprite joueur;
+         joueur.x = fst(proch_case);
+         affiche_sprite joueur;
+       done;
+     |  _  -> ());
+  affiche()*)*)
 
 let () =
   auto_synchronize false;
