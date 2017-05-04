@@ -161,7 +161,7 @@ let () =
   ouvrir_fenetre();
   dessiner_arene grille bombers;
   affichage_bombermen_depart();
-  (*while true do
-    deplacement bleu grille;
-  done;*)
+  while true do
+    deplacement Bleu grille;
+  done;
   ignore (read_key ())
