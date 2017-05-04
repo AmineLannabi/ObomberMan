@@ -16,6 +16,7 @@ let grille =
     [|'='; ' '; ' '; '='; ' '; ' '; '='; ' '; ' '; '='|];
     [|'='; '='; '='; '='; '='; '='; '='; '='; '='; '='|];
   |]
+let bombers = [ ("bleu", 1, 1, "sud"); ("vert", 7, 1, "sud")] 
 
 let ouvrir_fenetre () =
   init 92 72 10 10
@@ -28,68 +29,58 @@ let coord_x_to_case x =
 let coord_y_to_case y =
   y/72
 
-(** mise en place de l'arene au départ du jeu **)
-let dessiner_arene m nbJoueur = 
-  (** écriture du(des) joueur(s) à l'origine **)
-  (match nbJoueur with
-   | 1 -> Printf.printf "Bleu 7 3 Sud\n";
-   | 2 -> Printf.printf "Bleu 7 3 Sud\n";
-     Printf.printf "Rouge 5 7 Sud\n";
-   | 3 -> Printf.printf "Bleu 7 3 Sud\n";
-     Printf.printf "Rouge 5 7 Sud\n";
-     Printf.printf "Vert 1 7 Sud\n";
-   | 4 -> Printf.printf "Bleu 7 3 Sud\n";
-     Printf.printf "Rouge 5 7 Sud\n";
-     Printf.printf "Vert 1 7 Sud\n";
-     Printf.printf "Violet 1 2 Sud\n";
-   | _ -> Printf.printf "mauvais nombre de joueur\n");
+let couleur_of_string s = 
+  match s with
+  | "bleu" -> Bleu
+  | "rouge" -> Rouge
+  | "vert" -> Vert
+  | "violet" -> Violet
+  | _ -> assert false
 
-  (** affichage des cases **)
+let dir_of_string s = 
+  match s with
+  | "sud" -> Sud
+  | "nord" -> Nord
+  | "est" -> Est
+  | "ouest" -> Ouest
+  | _ -> assert false
+
+(** mise en place de l'arene au départ du jeu **)
+let dessiner_arene m l = 
+  List.map (function (c,i,j,d) -> Printf.printf "%s %d %d %s\n%!" c i j d) l;
   for i = 0 to 9 do
     for j = 0 to 9 do
       begin
         match m.(i).(j) with
         | ' ' -> let sprite_sol = Sol (j , 9-i) in 
           affiche_sprite sprite_sol;
-          print_char ' ';
+          Printf.printf " %!";
         | '=' -> let sprite_bloc = Bloc {blk_i = j; blk_j = 9-i;  blk_forme = Incassable } in
           affiche_sprite sprite_bloc;
           affiche();
-          print_char '=';
+          Printf.printf "=%!";
         | 'x' -> let sprite_bloc = Bloc {blk_i = j; blk_j = 9-i; blk_forme = Cassable(Intact) } in
           affiche_sprite sprite_bloc;
           affiche();
-          print_char 'x';
+          Printf.printf "x%!";
         | _ -> ();
       end
     done;
     Printf.printf "\n";
   done;
   affiche();
-  synchronize ()
-
-let couleur_of_string s = 
-	match s with
-	| "bleu" -> Bleu
-	| "rouge" -> Rouge
-	| _ -> assert false
-
-let dir_of_string s = 
-	match s with
-	| "sud" -> Sud
-	| _ -> assert false
-
-let bombers = [ ("bleu", 1, 1, "sud"); ("vert", 7, 1, "sud")] 
+  synchronize()
 
 (** affichage des bombermens **)
-let affichage_bombermen_depart nbJoueur =
-	let build_bomber c i j d = 
-		Bomberman {x = i;y = i;couleur = couleur_of_string c; dir = dir_of_string ; etat = Vivant; pas = None} 
-	in
-	let l = List.map build_bomber bombers in
-	
+let affichage_bombermen_depart () =
+  let build_bomber (c, i, j, d) = 
+    Printf.printf "coord i: %d, coord j: %d\n" (coord_x_to_case j) (coord_y_to_case i);
+    Bomberman {x = (coord_x_to_case j);y = (coord_y_to_case i);couleur = couleur_of_string c; dir = dir_of_string d; etat = Vivant; pas = None} 
+  in
+  let l = List.map build_bomber bombers in
+  List.iter affiche_sprite l;
   affiche();
-  synchronize ()
+  synchronize()
 
 (** prochaine case: i j depuis: direction et coordonnées fenetre **)
 let prochaine_case x y dir =
@@ -167,6 +158,6 @@ let deplacement coul i j direction m =
 let () =
   auto_synchronize false;
   ouvrir_fenetre();
-  dessiner_arene grille 1;
-  affichage_bombermen_depart 1;
+  dessiner_arene grille bombers;
+  affichage_bombermen_depart bombers;
   ignore (read_key ())
