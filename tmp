@@ -1,0 +1,172 @@
+open Graphics
+open Gtypes
+open Ig
+
+(** declaration de la grille de jeur **)
+let grille = 
+  [|
+    [|'='; '='; '='; '='; '='; '='; '='; '='; '='; '='|];
+    [|'='; ' '; ' '; ' '; ' '; '='; ' '; ' '; ' '; '='|];
+    [|'='; ' '; '='; ' '; ' '; 'x'; ' '; ' '; ' '; '='|];
+    [|'='; ' '; ' '; '='; ' '; '='; 'x'; '='; ' '; '='|];
+    [|'='; ' '; 'x'; ' '; ' '; '='; ' '; ' '; ' '; '='|];
+    [|'='; ' '; '='; ' '; ' '; '='; ' '; ' '; ' '; '='|];
+    [|'='; ' '; 'x'; ' '; ' '; '='; ' '; ' '; ' '; '='|];
+    [|'='; ' '; '='; ' '; ' '; 'x'; ' '; '='; ' '; '='|];
+    [|'='; ' '; ' '; '='; ' '; ' '; '='; ' '; ' '; '='|];
+    [|'='; '='; '='; '='; '='; '='; '='; '='; '='; '='|];
+  |]
+
+let ouvrir_fenetre () =
+  init 92 72 10 10
+
+let case_to_coord i j =
+  (92/2)+(j*92), (72/2)+(i*72)
+
+let coord_x_to_case x =
+  x/92
+let coord_y_to_case y =
+  y/72
+
+(** mise en place de l'arene au départ du jeu **)
+let dessiner_arene m nbJoueur = 
+  (** écriture du(des) joueur(s) à l'origine **)
+  (match nbJoueur with
+   | 1 -> Printf.printf "Bleu 7 3 Sud\n";
+   | 2 -> Printf.printf "Bleu 7 3 Sud\n";
+     Printf.printf "Rouge 5 7 Sud\n";
+   | 3 -> Printf.printf "Bleu 7 3 Sud\n";
+     Printf.printf "Rouge 5 7 Sud\n";
+     Printf.printf "Vert 1 7 Sud\n";
+   | 4 -> Printf.printf "Bleu 7 3 Sud\n";
+     Printf.printf "Rouge 5 7 Sud\n";
+     Printf.printf "Vert 1 7 Sud\n";
+     Printf.printf "Violet 1 2 Sud\n";
+   | _ -> Printf.printf "mauvais nombre de joueur\n");
+
+  (** affichage des cases **)
+  for i = 0 to 9 do
+    for j = 0 to 9 do
+      begin
+        match m.(i).(j) with
+        | ' ' -> let sprite_sol = Sol (j , 9-i) in 
+          affiche_sprite sprite_sol;
+          print_char ' ';
+        | '=' -> let sprite_bloc = Bloc {blk_i = j; blk_j = 9-i;  blk_forme = Incassable } in
+          affiche_sprite sprite_bloc;
+          affiche();
+          print_char '=';
+        | 'x' -> let sprite_bloc = Bloc {blk_i = j; blk_j = 9-i; blk_forme = Cassable(Intact) } in
+          affiche_sprite sprite_bloc;
+          affiche();
+          print_char 'x';
+        | _ -> ();
+      end
+    done;
+    Printf.printf "\n";
+  done;
+  affiche();
+  synchronize ()
+
+let couleur_of_string s = 
+	match s with
+	| "bleu" -> Bleu
+	| "rouge" -> Rouge
+	| _ -> assert false
+
+let dir_of_string s = 
+	match s with
+	| "sud" -> Sud
+	| _ -> assert false
+
+let bombers = [ ("bleu", 1, 1, "sud"); ("vert", 7, 1, "sud")] 
+
+(** affichage des bombermens **)
+let affichage_bombermen_depart nbJoueur =
+	let build_bomber c i j d = 
+		Bomberman {x = i;y = i;couleur = couleur_of_string c; dir = dir_of_string ; etat = Vivant; pas = None} 
+	in
+	let l = List.map build_bomber bombers in
+	
+  affiche();
+  synchronize ()
+
+(** prochaine case: i j depuis: direction et coordonnées fenetre **)
+let prochaine_case x y dir =
+  match dir with
+  | Nord -> (coord_x_to_case x) +1, coord_y_to_case y;
+  | Sud -> (coord_x_to_case x)-1, coord_x_to_case y;
+  | Est -> coord_x_to_case x, (coord_y_to_case y)+1;
+  | Ouest -> coord_x_to_case x, (coord_y_to_case y)-1
+
+(** depalcement d'un bomberman **)
+let deplacement coul i j direction m =
+  let x = ref (fst(case_to_coord i j)) in
+  let y = ref (snd(case_to_coord i j)) in 
+  let old_sprite = Bomberman {x= !x;y= !y;couleur=coul;dir=direction;etat=Vivant;pas=None} in
+  if touche_pressee() then
+    (match lecture_touche() with
+     | 'z' -> let proch_case = prochaine_case !x !y Nord in
+       while (m.(fst(proch_case)).(snd(proch_case)) == ' ')
+       do
+         efface_sprite old_sprite;
+         x := !x+1;
+         let new_sprite = Bomberman {
+             x = !x;
+             y = !y;
+             couleur = coul;
+             dir = Nord;
+             etat = Vivant;
+             pas = None} in 
+         affiche_sprite new_sprite;
+       done;
+     |  'd' -> let proch_case = prochaine_case !x !y Est in
+       while (m.(fst(proch_case)).(snd(proch_case)) == ' ')
+       do
+         efface_sprite old_sprite;
+         y := !y+1;
+         let new_sprite = Bomberman {
+             x = !x;
+             y = !y;
+             couleur = coul;
+             dir = Est;
+             etat = Vivant;
+             pas = None} in 
+         affiche_sprite new_sprite;
+       done;
+     |  'q' -> let proch_case = prochaine_case !x !y Ouest in
+       while (m.(fst(proch_case)).(snd(proch_case)) == ' ')
+       do
+         efface_sprite old_sprite;
+         y := !y-1;
+         let new_sprite = Bomberman {
+             x = !x;
+             y = !y;
+             couleur = coul;
+             dir = Ouest;
+             etat = Vivant;
+             pas = None} in 
+         affiche_sprite new_sprite;
+       done;
+     |  's' -> let proch_case = prochaine_case !x !y Sud in
+       while (m.(fst(proch_case)).(snd(proch_case)) == ' ')
+       do
+         efface_sprite old_sprite;
+         x := !x-1;
+         let new_sprite = Bomberman {
+             x = !x;
+             y = !y;
+             couleur = coul;
+             dir = Sud;
+             etat = Vivant;
+             pas = None} in 
+         affiche_sprite new_sprite;
+       done);
+  affiche()
+
+let () =
+  auto_synchronize false;
+  ouvrir_fenetre();
+  dessiner_arene grille 1;
+  affichage_bombermen_depart 1;
+  ignore (read_key ())
