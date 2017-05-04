@@ -89,52 +89,94 @@ let dessiner_arene m  nbJoueur =
   affiche();
   synchronize ()
 
-(*let prochaine_case x y dir =
+(** coordonées i j de la prochaine case en fonction de la direction et des coordonnées fenetre **)
+let prochaine_case x y dir =
   match dir with
-  | Nord -> fst(coord_to_case x y)+1, snd(coord_to_case);
-  | Sud -> fst(coord_to_case x y)-1, snd(coord_to_case);
-  | Est -> fst(coord_to_case x y), snd(coord_to_case)+1;
-  | Ouest -> fst(coord_to_case x y), snd(coord_to_case)-1;
-  | _ -> ()
+  | Nord -> fst(coord_to_case x y)+1, snd(coord_to_case x y);
+  | Sud -> fst(coord_to_case x y)-1, snd(coord_to_case x y);
+  | Est -> fst(coord_to_case x y), snd(coord_to_case x y)+1;
+  | Ouest -> fst(coord_to_case x y), snd(coord_to_case x y)-1
 
-  let deplacement joueur m =
-  let x = joueur.x in
-  let y = joueur.y in
+let deplacement joueur m =
+  let x = ref joueur.x in
+  let y = ref joueur.y in
+  let old_sprite = Bomberman {
+      x = joueur.x;
+      y = joueur.y;
+      couleur = joueur.couleur;
+      dir = joueur.dir;
+      etat = joueur.etat;
+      pas = None
+    } in 
   if touche_pressee() then
     (match lecture_touche() with
-     |  'z' -> let proch_case = prochaine case x y Nord in
-       while (m.(fst(proch_case).snd(proch_case)) === ' ')
+     |  'z' -> let proch_case = prochaine_case !x !y Nord in
+       while (m.(fst(proch_case)).(snd(proch_case)) == ' ')
        do
-         efface_sprite joueur;
-         joueur.x = fst(proch_case);
-         affiche_sprite joueur;
+         efface_sprite old_sprite;
+         let new_sprite = Bomberman {
+             x = !x;
+             y = !y;
+             couleur = joueur.couleur;
+             dir = Nord;
+             etat = joueur.etat;
+             pas = None} in 
+         affiche_sprite new_sprite;
+         x := !x+1;
        done;
-     |  'd' -> let proch_case = prochaine case x y Est in
-       while (m.(fst(proch_case).snd(proch_case)) === ' ')
+     |  'd' -> let proch_case = prochaine_case !x !y Est in
+       while (m.(fst(proch_case)).(snd(proch_case)) == ' ')
        do
-         efface_sprite joueur;
-         joueur.y = snd(proch_case);
-         affiche_sprite joueur;
+         efface_sprite old_sprite;
+         let new_sprite = Bomberman {
+             x = !x;
+             y = !y;
+             couleur = joueur.couleur;
+             dir = Est;
+             etat = joueur.etat;
+             pas = None
+           } in 
+         affiche_sprite new_sprite;
+         y := !y+1;
        done;
-     |  'q' -> let proch_case = prochaine case x y Ouest in
-       while (m.(fst(proch_case).snd(proch_case)) === ' ')
+     |  'q' -> let proch_case = prochaine_case !x !y Ouest in
+       while (m.(fst(proch_case)).(snd(proch_case)) == ' ')
        do
-         efface_sprite joueur;
-         joueur.y = snd(proch_case);
-         affiche_sprite joueur;
+         efface_sprite old_sprite;
+         let new_sprite = Bomberman {
+             x = !x;
+             y = !y;
+             couleur = joueur.couleur;
+             dir = Ouest;
+             etat = joueur.etat;
+             pas = None
+           } in 
+         affiche_sprite new_sprite;
+         x := !x-1;
        done;
-     |  's' -> let proch_case = prochaine case x y Sud in
-       while (m.(fst(proch_case).snd(proch_case)) === ' ')
+     |  's' -> let proch_case = prochaine_case !x !y Sud in
+       while (m.(fst(proch_case)).(snd(proch_case)) == ' ')
        do
-         efface_sprite joueur;
-         joueur.x = fst(proch_case);
-         affiche_sprite joueur;
+         efface_sprite old_sprite;
+         let new_sprite = Bomberman {
+             x = !x;
+             y = !y;
+             couleur = joueur.couleur;
+             dir = Sud;
+             etat = joueur.etat;
+             pas = None
+           } in 
+         affiche_sprite new_sprite;
+         x := !x-1;
        done;
      |  _  -> ());
-  affiche()*)*)
+  affiche()
 
 let () =
   auto_synchronize false;
   ouvrir_fenetre();
-  dessiner_arene grille 4;
+  dessiner_arene grille 1;
+  let joueur = {x = fst(case_to_coord 7 3);y = snd(case_to_coord 7 3);couleur = Bleu;dir = Sud;etat = Vivant;pas = None} in
+  deplacement joueur grille;
   ignore (read_key ())
+
