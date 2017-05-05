@@ -132,16 +132,16 @@ let dessiner_arene m l =
   affiche();
   synchronize()
 
-let affiche_taille l = 
-  Printf.printf "%d\n" (List.length l)
-
 (** deplacement d'un bomberman **)
 let deplacement coul m =
-  let joueur = List.find (fun s -> match s with
-      | Bomberman(_) -> true 
-      | _ -> false) sprite_bomber in
-  let x = ref joueur.x in
-  let y = ref joueur.y in
+  let joueur = List.find 
+      (fun s -> 
+         match s with 
+         | Bomberman(r) -> r.couleur = coul 
+         | _ -> false) sprite_bomber in
+  let Bomberman(r) = joueur in
+  let x = ref r.x in
+  let y = ref r.y in
   if touche_pressee() then
     (match lecture_touche() with
      | 'z' -> let proch_case = prochaine_case !x !y Nord in
@@ -159,7 +159,7 @@ let deplacement coul m =
        do
          x := !x+5;
          (couleur_to_string coul, !y, !x, "est") :: bombers;
-         (* efface_sprite joueur; *)
+         efface_sprite joueur;
          let joueur = build_bomber2 (coul, !x, !y, Est) in
          affiche_sprite joueur;
        done;
@@ -181,7 +181,7 @@ let deplacement coul m =
          let joueur = build_bomber2 (coul, !x, !y, Sud) in
          affiche_sprite joueur;
        done;
-     | 'b' -> let bombe = Bombe { b_i=coord_y_to_case j;b_j=coord_x_to_case i;b_duree=15} in
+     | 'b' -> let bombe = { b_i=coord_y_to_case !x;b_j=coord_x_to_case !y;b_duree=15} in
        affiche_explosion bombe;
     );
   affiche()
@@ -193,6 +193,7 @@ let () =
   affichage_bombermen_depart();
   let bombe = {b_i=7;b_j=3;b_duree=15} in
   affiche_explosion bombe;
+  deplacement Bleu grille;
   while true do
     if touche_pressee() then
       (match lecture_touche() with
