@@ -16,7 +16,7 @@ let grille =
     [|'='; ' '; ' '; '='; ' '; ' '; '='; ' '; ' '; '='|];
     [|'='; '='; '='; '='; '='; '='; '='; '='; '='; '='|];
   |]
-let bombers = [ ("bleu", 1, 1, "sud"); ("vert", 7, 1, "sud")] 
+let bombers = [ ("bleu", 1, 1, "sud"); ("vert", 7, 1, "sud")]
 
 let ouvrir_fenetre () =
   init 92 72 10 10
@@ -45,7 +45,6 @@ let couleur_to_string c =
   | Rouge -> "rouge"
   | Vert -> "vert"
   | Violet -> "violet"
-  | _ -> assert false
 
 (** convertit string en direction **)
 let dir_of_string s = 
@@ -54,7 +53,6 @@ let dir_of_string s =
   | "nord" -> Nord
   | "est" -> Est
   | "ouest" -> Ouest
-  | _ -> assert false
 
 (** prochaine case: i j depuis: direction et coordonnées fenetre **)
 let prochaine_case x y dir =
@@ -64,6 +62,7 @@ let prochaine_case x y dir =
   | Est -> coord_x_to_case x, (coord_y_to_case y)+1;
   | Ouest -> coord_x_to_case x, (coord_y_to_case y)-1
 
+(** construction d'un bomberman depuis (string*int*int*string) **)
 let build_bomber (c, i, j, d) = 
   Bomberman {
     x = fst(case_to_coord i j);
@@ -71,7 +70,26 @@ let build_bomber (c, i, j, d) =
     couleur = couleur_of_string c;
     dir = dir_of_string d;
     etat = Vivant;
+    pas = None} 
+
+(** construction d'un bomberman depuis (couleur*int*int*dir) **)
+let build_bomber2 (c, i , j, d) = 
+  Bomberman {
+    x = fst(case_to_coord i j);
+    y = snd(case_to_coord i j);
+    couleur = c;
+    dir = d;
+    etat = Vivant;
     pas = None}
+
+let bomberman = List.map build_bomber bombers
+
+(** affichage des bombermens **)
+let affichage_bombermen_depart () =
+  let l = List.map build_bomber bombers in
+  List.iter affiche_sprite l;
+  affiche();
+  synchronize()
 
 (** mise en place de l'arene au départ du jeu **)
 let dessiner_arene m l = 
@@ -99,54 +117,51 @@ let dessiner_arene m l =
   affiche();
   synchronize()
 
-(** affichage des bombermens **)
-let affichage_bombermen_depart () =
-	let l = List.map build_bomber bombers in
-  List.iter affiche_sprite l;
-  affiche();
-  synchronize()
+let affiche_taille l = 
+  Printf.printf "%d\n" (List.length l)
 
 (** deplacement d'un bomberman **)
 let deplacement coul m =
-  let joueur = List.find (fun x -> x.couleur = coul) bombers in
-  let x = ref joueur.i in
-  let y = ref joueur.j in
+  let joueur = List.find (fun x -> x.couleur = coul) bomberman in
+  let x = ref joueur.x in
+  let y = ref joueur.y in
   if touche_pressee() then
     (match lecture_touche() with
      | 'z' -> let proch_case = prochaine_case !x !y Nord in
        while (m.(fst(proch_case)).(snd(proch_case)) == ' ')
        do
-         x := !x+1;
+         y := !y+5;
          (couleur_to_string coul, !y, !x, "nord") :: bombers;
+         (*efface_sprite joueur;*)
+         let joueur = build_bomber2 (coul, !x, !y, Nord) in
          efface_sprite joueur;
-         let joueur = build_bomber (coul, !x, !y, Nord) in
          affiche_sprite joueur;
        done;
      |  'd' -> let proch_case = prochaine_case !x !y Est in
        while (m.(fst(proch_case)).(snd(proch_case)) == ' ')
        do
-         y := !y-1;
+         x := !x+5;
          (couleur_to_string coul, !y, !x, "est") :: bombers;
-         efface_sprite joueur;
-         let joueur = build_bomber (coul, !x, !y, Est) in
+         (*efface_sprite joueur;*)
+         let joueur = build_bomber2 (coul, !x, !y, Est) in
          affiche_sprite joueur;
        done;
      |  'q' -> let proch_case = prochaine_case !x !y Ouest in
        while (m.(fst(proch_case)).(snd(proch_case)) == ' ')
        do
-         y := !y+1;
+         x := !x-5;
          (couleur_to_string coul, !y, !x, "ouest") :: bombers;
-         efface_sprite joueur;
-         let joueur = build_bomber (coul, !x, !y, Ouest) in
+         (*efface_sprite joueur;*)
+         let joueur = build_bomber2 (coul, !x, !y, Ouest) in
          affiche_sprite joueur;
        done;
      |  's' -> let proch_case = prochaine_case !x !y Sud in
        while (m.(fst(proch_case)).(snd(proch_case)) == ' ')
        do
-         x := !x-1;
+         y := !y-5;
          (couleur_to_string coul, !y, !x, "sud") :: bombers;
-         efface_sprite joueur;
-         let joueur = build_bomber (coul, !x, !y, Sud) in
+         (*efface_sprite joueur;*)
+         let joueur = build_bomber2 (coul, !x, !y, Sud) in
          affiche_sprite joueur;
        done;);
   affiche()
@@ -158,5 +173,6 @@ let () =
   affichage_bombermen_depart();
   while true do
     deplacement Bleu grille;
-  done;
-  ignore (read_key ())
+    done;
+    ignore (read_key ())
+  
