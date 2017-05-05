@@ -171,8 +171,12 @@ let () =
   ouvrir_fenetre();
   dessiner_arene grille bombers;
   affichage_bombermen_depart();
-  while true do
-    deplacement Bleu grille;
-    done;
+   while true do
+    if touche_pressee() then
+      (match lecture_touche() with
+       | 'e' -> Printf.printf "e%!";
+       | 'q' -> close_graph () 
+       |  _  -> ())
+  done;
     ignore (read_key ())
   
