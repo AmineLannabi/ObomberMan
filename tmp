@@ -1,6 +1,7 @@
 open Graphics
 open Gtypes
 open Ig
+open Unix
 
 (** declaration de la grille de jeur **)
 let grille = 
@@ -82,7 +83,7 @@ let build_bomber2 (c, i , j, d) =
     etat = Vivant;
     pas = None}
 
-let bomberman = List.map build_bomber bombers
+let sprite_bomber = List.map build_bomber bombers
 
 (** affichage des bombermens **)
 let affichage_bombermen_depart () =
@@ -90,6 +91,20 @@ let affichage_bombermen_depart () =
   List.iter affiche_sprite l;
   affiche();
   synchronize()
+
+(** affichage d'une bombe jusqu'à son explosion **)
+let rec affiche_explosion bombe =
+  let sprite_bombe = Bombe {b_i = bombe.b_i;b_j = bombe.b_j;b_duree = bombe.b_duree} in
+  affiche_sprite sprite_bombe;
+  affiche();
+  sleep(1);
+  if bombe.b_duree > 0 then
+    (efface_sprite sprite_bombe;
+     affiche();
+     affiche_explosion ({b_i = bombe.b_i;b_j = bombe.b_j;b_duree = bombe.b_duree - 1}));
+  sleep(1);
+  efface_sprite sprite_bombe;
+  affiche()
 
 (** mise en place de l'arene au départ du jeu **)
 let dessiner_arene m l = 
@@ -122,7 +137,9 @@ let affiche_taille l =
 
 (** deplacement d'un bomberman **)
 let deplacement coul m =
-  let joueur = List.find (fun x -> x.couleur = coul) bomberman in
+  let joueur = List.find (fun s -> match s with
+      | Bomberman(_) -> true 
+      | _ -> false) sprite_bomber in
   let x = ref joueur.x in
   let y = ref joueur.y in
   if touche_pressee() then
@@ -132,7 +149,7 @@ let deplacement coul m =
        do
          y := !y+5;
          (couleur_to_string coul, !y, !x, "nord") :: bombers;
-         (*efface_sprite joueur;*)
+         (* efface_sprite joueur; *)
          let joueur = build_bomber2 (coul, !x, !y, Nord) in
          efface_sprite joueur;
          affiche_sprite joueur;
@@ -142,7 +159,7 @@ let deplacement coul m =
        do
          x := !x+5;
          (couleur_to_string coul, !y, !x, "est") :: bombers;
-         (*efface_sprite joueur;*)
+         (* efface_sprite joueur; *)
          let joueur = build_bomber2 (coul, !x, !y, Est) in
          affiche_sprite joueur;
        done;
@@ -151,7 +168,7 @@ let deplacement coul m =
        do
          x := !x-5;
          (couleur_to_string coul, !y, !x, "ouest") :: bombers;
-         (*efface_sprite joueur;*)
+         (* efface_sprite joueur; *)
          let joueur = build_bomber2 (coul, !x, !y, Ouest) in
          affiche_sprite joueur;
        done;
@@ -160,32 +177,27 @@ let deplacement coul m =
        do
          y := !y-5;
          (couleur_to_string coul, !y, !x, "sud") :: bombers;
-         (*efface_sprite joueur;*)
+         (* efface_sprite joueur; *)
          let joueur = build_bomber2 (coul, !x, !y, Sud) in
          affiche_sprite joueur;
-       done;);
+       done;
+     | 'b' -> let bombe = Bombe { b_i=coord_y_to_case j;b_j=coord_x_to_case i;b_duree=15} in
+       affiche_explosion bombe;
+    );
   affiche()
-let affiche_flamme ()= 
-  let sprite_flam = Flamme{ 
-      f_i =7;     (** Abscisse de la case dans laquelle se trouve le sprite *)
-      f_j = 1;     (** Ordonnée de la case dans laquelle se trouve le sprite *)
-      f_forme =FGauche (** Forme de la flamme *)
-    } in
-  affiche_sprite sprite_flam;
-  affiche()
+
 let () =
   auto_synchronize false;
   ouvrir_fenetre();
   dessiner_arene grille bombers;
   affichage_bombermen_depart();
-  affiche_flamme();
-
-   while true do
+  let bombe = {b_i=7;b_j=3;b_duree=15} in
+  affiche_explosion bombe;
+  while true do
     if touche_pressee() then
       (match lecture_touche() with
        | 'e' -> Printf.printf "e%!";
-       | 'q' -> close_graph () 
+       | 'o' -> close_graph () 
        |  _  -> ())
   done;
-    ignore (read_key ())
-  
+  ignore (read_key ())
