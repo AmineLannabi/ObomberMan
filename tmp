@@ -17,7 +17,7 @@ let grille =
     [|'='; ' '; ' '; '='; ' '; ' '; '='; ' '; ' '; '='|];
     [|'='; '='; '='; '='; '='; '='; '='; '='; '='; '='|];
   |]
-let bombers = [ ("bleu", 1, 1, "sud"); ("vert", 7, 1, "sud")]
+let bombers = [ ("bleu", 1, 1, "sud"); ("vert", 7, 1, "sud");("rouge", 7, 4, "sud"); ("violet", 3, 7, "sud")]
 
 let ouvrir_fenetre () =
   init 92 72 10 10
@@ -93,17 +93,19 @@ let affichage_bombermen_depart () =
   synchronize()
 
 (** affichage d'une bombe jusqu'à son explosion **)
-let rec affiche_explosion bombe =
+let rec affiche_explosion bombe joueur =
   let sprite_bombe = Bombe {b_i = bombe.b_i;b_j = bombe.b_j;b_duree = bombe.b_duree} in
   affiche_sprite sprite_bombe;
   affiche();
-  sleep(1);
+  sleepf(1./.5.);
   if bombe.b_duree > 0 then
     (efface_sprite sprite_bombe;
+     affiche_sprite joueur;
      affiche();
-     affiche_explosion ({b_i = bombe.b_i;b_j = bombe.b_j;b_duree = bombe.b_duree - 1}));
-  sleep(1);
+     affiche_explosion ({b_i = bombe.b_i;b_j = bombe.b_j;b_duree = bombe.b_duree - 1}) joueur);
+  sleepf(1./.5.);
   efface_sprite sprite_bombe;
+  affiche_sprite joueur;
   affiche()
 
 (** mise en place de l'arene au départ du jeu **)
@@ -132,8 +134,8 @@ let dessiner_arene m l =
   affiche();
   synchronize()
 
-(** deplacement d'un bomberman **)
-let deplacement coul m =
+(** controle d'un bomberman **)
+let controle coul m =
   let joueur = List.find 
       (fun s -> 
          match s with 
@@ -143,7 +145,7 @@ let deplacement coul m =
   let x = ref r.x in
   let y = ref r.y in
   if touche_pressee() then
-    (match lecture_touche() with
+    (match lecture_touche() with(*
      | 'z' -> let proch_case = prochaine_case !x !y Nord in
        while (m.(fst(proch_case)).(snd(proch_case)) == ' ')
        do
@@ -180,9 +182,11 @@ let deplacement coul m =
          (* efface_sprite joueur; *)
          let joueur = build_bomber2 (coul, !x, !y, Sud) in
          affiche_sprite joueur;
-       done;
-     | 'b' -> let bombe = { b_i=coord_y_to_case !x;b_j=coord_x_to_case !y;b_duree=15} in
-       affiche_explosion bombe;
+       done;*)
+     | 'b' -> let bombe = {b_i=coord_x_to_case !x;b_j=coord_y_to_case !y;b_duree=15} in
+       affiche_explosion bombe joueur;
+     | 'o' -> close_graph(Printf.printf "Fin du jeu!\n")
+     |  _  -> ()
     );
   affiche()
 
@@ -191,14 +195,7 @@ let () =
   ouvrir_fenetre();
   dessiner_arene grille bombers;
   affichage_bombermen_depart();
-  let bombe = {b_i=7;b_j=3;b_duree=15} in
-  affiche_explosion bombe;
-  deplacement Bleu grille;
   while true do
-    if touche_pressee() then
-      (match lecture_touche() with
-       | 'e' -> Printf.printf "e%!";
-       | 'o' -> close_graph () 
-       |  _  -> ())
+    controle Bleu grille;
   done;
   ignore (read_key ())
