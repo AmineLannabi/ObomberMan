@@ -3,7 +3,7 @@ open Gtypes
 open Ig
 open Unix
 
-(** declaration de la grille de jeur **)
+(** declaration de la grille de jeu **)
 let grille = 
   [|
     [|'='; '='; '='; '='; '='; '='; '='; '='; '='; '='|];
@@ -17,6 +17,7 @@ let grille =
     [|'='; ' '; ' '; '='; ' '; ' '; '='; ' '; ' '; '='|];
     [|'='; '='; '='; '='; '='; '='; '='; '='; '='; '='|];
   |]
+  (** liste de joueur **)
 let bombers = [ ("bleu", 1, 1, "sud"); ("vert", 7, 1, "sud");("rouge", 7, 4, "sud"); ("violet", 3, 7, "sud")]
 
 let ouvrir_fenetre () =
@@ -58,10 +59,10 @@ let dir_of_string s =
 (** prochaine case: i j depuis: direction et coordonnées fenetre **)
 let prochaine_case x y dir =
   match dir with
-  | Nord -> (coord_x_to_case x) +1, coord_y_to_case y;
-  | Sud -> (coord_x_to_case x)-1, coord_x_to_case y;
-  | Est -> coord_x_to_case x, (coord_y_to_case y)+1;
-  | Ouest -> coord_x_to_case x, (coord_y_to_case y)-1
+  | Nord -> 9-coord_y_to_case y, coord_x_to_case x;
+  | Sud -> 9-coord_x_to_case y, coord_x_to_case x;
+  | Est -> 9-coord_y_to_case y, coord_x_to_case x;
+  | Ouest -> 9-coord_y_to_case y, coord_x_to_case x
 
 (** construction d'un bomberman depuis (string*int*int*string) **)
 let build_bomber (c, i, j, d) = 
@@ -137,9 +138,9 @@ let dessiner_arene m l =
 let rec mouvement x y m joueur coul dir =
   match dir with
   | Nord -> let proch_case = prochaine_case x y Nord in
+    Printf.printf "x: %d, y: %d\n%!" (fst(proch_case)) (snd(proch_case));
     if m.(fst(proch_case)).(snd(proch_case)) == ' ' then 
       begin
-        Printf.printf "x: %d, y: %d\n%!" (fst(proch_case)) (snd(proch_case));
         efface_sprite joueur;
         let joueur2 = build_bomber2 (coul, x, (y+5), Nord) in
         affiche_sprite joueur2;
@@ -148,9 +149,10 @@ let rec mouvement x y m joueur coul dir =
         mouvement x (y+5) m joueur2 coul Nord;
       end
   | Sud -> let proch_case = prochaine_case x y Sud in
+    Printf.printf "x: %d, y: %d\n%!" (fst(proch_case)) (snd(proch_case));
     if m.(fst(proch_case)).(snd(proch_case)) == ' ' then 
       begin
-                Printf.printf "x: %d, y: %d\n%!" (fst(proch_case)) (snd(proch_case));
+
         efface_sprite joueur;
         let joueur2 = build_bomber2 (coul, x, (y-5), Sud) in
         affiche_sprite joueur2;
@@ -159,9 +161,10 @@ let rec mouvement x y m joueur coul dir =
         mouvement x (y-5) m joueur2 coul Sud;
       end
   | Est -> let proch_case = prochaine_case x y Est in
+    Printf.printf "x: %d, y: %d\n%!" (fst(proch_case)) (snd(proch_case));
     if m.(fst(proch_case)).(snd(proch_case)) == ' ' then 
       begin
-                Printf.printf "x: %d, y: %d\n%!" (fst(proch_case)) (snd(proch_case));
+
         efface_sprite joueur;
         let joueur2 = build_bomber2 (coul,(x+5), y, Est) in
         affiche_sprite joueur2;
@@ -170,9 +173,10 @@ let rec mouvement x y m joueur coul dir =
         mouvement (x+5) y m joueur2 coul Est;
       end
   | Ouest -> let proch_case = prochaine_case x y Ouest in
+    Printf.printf "x: %d, y: %d\n%!" (fst(proch_case)) (snd(proch_case));
     if m.(fst(proch_case)).(snd(proch_case)) == ' ' then 
       begin
-                Printf.printf "x: %d, y: %d\n%!" (fst(proch_case)) (snd(proch_case));
+
         efface_sprite joueur;
         let joueur2 = build_bomber2 (coul, (x-5), y, Ouest) in
         affiche_sprite joueur2;
@@ -206,6 +210,6 @@ let () =
   dessiner_arene grille bombers;
   affichage_bombermen_depart();
   while true do
-    controle Rouge grille;
+    controle Vert grille;
   done;
   ignore (read_key ())
