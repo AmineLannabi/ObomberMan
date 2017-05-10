@@ -1,73 +1,84 @@
-let rec affiche_flamme flamme bombe =
+let affiche_flamme m bombe dir=
   let sprite_flammeCentrale = Flamme {  f_i=bombe.b_i;f_j=bombe.b_j;f_forme=FCroix} in
+  let i = bombe.b_i in
+  let j = bombe.b_j in
+  let z = i+1 in 
   affiche_sprite sprite_flammeCentrale;
-  affiche();
-  sleepf(1./.5.);
+  (*   affiche();
+  *) 
   match dir with
-  | Nord -> let proch_case = prochaine_case x y Nord in
+  | Nord -> let proch_case = prochaine_case_ij i j Nord in
+    Printf.printf "%d \n %!" i;
+    Printf.printf "%d \n%!" j;
+    (*     let proch_case2 = prochaine_case_ij i j Nord in 
+    *)    
+    if (m.(fst(proch_case)).(snd(proch_case)) == ' ') then 
+      begin
+        (*         efface_sprite joueur;
+        *)
+        let sprite_flamme = Flamme {  f_i=i;f_j=j+1;f_forme=FVert} in
+        affiche_sprite sprite_flamme;
+        (*         affiche();
+        *)      
+      end
+    else if (m.(fst(proch_case)).(snd(proch_case)) == 'x'(*  || (m.(fst(proch_case)).(snd(proch_case)) == '=') *)) then
+      begin 
+        (*         efface_sprite joueur;*)
+        let sprite_flamme = Flamme {  f_i=i;f_j=j+1;f_forme=FHaut} in
+        affiche_sprite sprite_flamme;
+        (*         affiche();
+        *)      
+      end
+  | Sud -> let proch_case = prochaine_case i j Sud in
+    if (m.(fst(proch_case)).(snd(proch_case)) == ' ') then 
+      begin
+        (*         efface_sprite joueur;
+        *)        
+        let sprite_flamme = Flamme {  f_i=i;f_j=j - 1;f_forme=FVert} in
+        affiche_sprite sprite_flamme;
+        (*         affiche();
+        *)      end
+    else if (m.(fst(proch_case)).(snd(proch_case)) == 'x' ) then
+      begin 
+        (*         efface_sprite joueur;
+        *)        
+        let sprite_flamme = Flamme {  f_i=i;f_j=j - 1;f_forme=FBas} in
+        affiche_sprite sprite_flamme;
+        (*         affiche();
+        *)      
+      end
+  | Est -> let proch_case = prochaine_case i j Est in
+    if m.(fst(proch_case)).(snd(proch_case)) == ' ' then 
+
+      begin
+        Printf.printf "%d \n %!" i;
+        Printf.printf "%d \n%!" j;
+        (*         efface_sprite joueur;
+        *)        let sprite_flamme = Flamme {  f_i=i + 1;f_j=j;f_forme=FHoriz} in
+        affiche_sprite sprite_flamme;
+        (*         affiche();
+        *)      end
+    else if (m.(fst(proch_case)).(snd(proch_case)) == 'x' ) then
+      begin 
+        (*         efface_sprite joueur;
+        *)        let sprite_flamme = Flamme {  f_i=i + 1;f_j=j;f_forme=FDroite} in
+        affiche_sprite sprite_flamme;
+        (*         affiche();
+        *)      end
+  | Ouest -> let proch_case = prochaine_case_ij i j Ouest in
     if m.(fst(proch_case)).(snd(proch_case)) == ' ' then 
       begin
-         efface_sprite joueur;
-         let sprite_flamme = Flamme {  f_i=bombe.b_i;f_j=(bombe.b_j + 1);f_forme=FVert} in
-         affiche_sprite sprite_flamme;
-         affiche;
-         affiche_flamme;
-      end
-    else if (m.(fst(proch_case)).(snd(proch_case)) == '=' || m.(fst(proch_case)).(snd(proch_case)) == 'x') then
-    begin 
-          efface_sprite joueur;
-         let sprite_flamme = Flamme {  f_i=bombe.b_i;f_j=(bombe.b_j + 1);f_forme=FHaut} in
-         affiche_sprite sprite_flamme;
-         affiche;
-         affiche_flamme;
-    end
-  | Sud -> let proch_case = prochaine_case x y Sud in
-    if m.(fst(proch_case)).(snd(proch_case)) == ' ' then 
-       begin
-         efface_sprite joueur;
-         let sprite_flamme = Flamme {  f_i=bombe.b_i;f_j=(bombe.b_j - 1);f_forme=FVert} in
-         affiche_sprite sprite_flamme;
-         affiche;
-         affiche_flamme;
-      end
-    else if (m.(fst(proch_case)).(snd(proch_case)) == '=' || m.(fst(proch_case)).(snd(proch_case)) == 'x') then
-    begin 
-          efface_sprite joueur;
-         let sprite_flamme = Flamme {  f_i=bombe.b_i;f_j=(bombe.b_j - 1);f_forme=FBas} in
-         affiche_sprite sprite_flamme;
-         affiche;
-         affiche_flamme;
-    end
-  | Est -> let proch_case = prochaine_case x y Est in
-    if m.(fst(proch_case)).(snd(proch_case)) == ' ' then 
-       begin
-         efface_sprite joueur;
-         let sprite_flamme = Flamme {  f_i=bombe.b_i;f_j=(bombe.b_j + 1);f_forme=FHoriz} in
-         affiche_sprite sprite_flamme;
-         affiche;
-         affiche_flamme;
-      end
-    else if (m.(fst(proch_case)).(snd(proch_case)) == '=' || m.(fst(proch_case)).(snd(proch_case)) == 'x') then
-    begin 
-          efface_sprite joueur;
-         let sprite_flamme = Flamme {  f_i=bombe.b_i;f_j=(bombe.b_j + 1);f_forme=FDroite} in
-         affiche_sprite sprite_flamme;
-         affiche;
-         affiche_flamme;
-    end
-  | Ouest -> let proch_case = prochaine_case x y Ouest in
-    begin
-         efface_sprite joueur;
-         let sprite_flamme = Flamme {  f_i=bombe.b_i;f_j=(bombe.b_j - 1);f_forme=FHoriz} in
-         affiche_sprite sprite_flamme;
-         affiche;
-         affiche_flamme;
-      end
-    else if (m.(fst(proch_case)).(snd(proch_case)) == '=' || m.(fst(proch_case)).(snd(proch_case)) == 'x') then
-    begin 
-          efface_sprite joueur;
-         let sprite_flamme = Flamme {  f_i=bombe.b_i;f_j=(bombe.b_j - 1);f_forme=FGauche} in
-         affiche_sprite sprite_flamme;
-         affiche;
-         affiche_flamme;
-    end
+        (*         efface_sprite joueur;
+        *)        let sprite_flamme = Flamme {  f_i=i-1;f_j=j;f_forme=FHoriz} in
+        affiche_sprite sprite_flamme;
+        (*         affiche();
+        *)      end
+
+    else if (m.(fst(proch_case)).(snd(proch_case)) == 'x' ) then
+      begin 
+        (*         efface_sprite joueur;
+        *)        let sprite_flamme = Flamme {  f_i=i - 1;f_j=j;f_forme=FGauche} in
+        affiche_sprite sprite_flamme;
+        (*         affiche();
+        *)      end;
+    affiche()
