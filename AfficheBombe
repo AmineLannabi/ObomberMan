@@ -1,3 +1,10 @@
+(** prochaine case: i j depuis: i j **)
+let prochaine_case_ij i j dir =
+  match dir with
+  | Nord -> i, j+1;
+  | Sud -> i, j-1;
+  | Est -> i+1, j;
+  | Ouest -> i-1, j
 let affiche_flamme m bombe dir=
   let sprite_flammeCentrale = Flamme {  f_i=bombe.b_i;f_j=bombe.b_j;f_forme=FCroix} in
   let i = bombe.b_i in
