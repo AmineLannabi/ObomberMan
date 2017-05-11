@@ -1,0 +1,367 @@
+open Graphics
+open Gtypes
+open Ig
+open Unix
+
+(** declaration de la grille de jeu **)
+let grille = 
+  [|
+    [|'='; '='; '='; '='; '='; '='; '='; '='; '='; '='|];
+    [|'='; ' '; ' '; ' '; ' '; '='; ' '; ' '; ' '; '='|];
+    [|'='; ' '; '='; ' '; ' '; 'x'; ' '; ' '; ' '; '='|];
+    [|'='; ' '; ' '; '='; ' '; '='; 'x'; '='; ' '; '='|];
+    [|'='; ' '; 'x'; ' '; ' '; '='; ' '; ' '; ' '; '='|];
+    [|'='; ' '; '='; ' '; ' '; '='; ' '; ' '; ' '; '='|];
+    [|'='; ' '; 'x'; ' '; ' '; '='; ' '; ' '; ' '; '='|];
+    [|'='; ' '; '='; ' '; ' '; 'x'; ' '; '='; ' '; '='|];
+    [|'='; ' '; ' '; '='; ' '; ' '; '='; ' '; ' '; '='|];
+    [|'='; '='; '='; '='; '='; '='; '='; '='; '='; '='|];
+  |]
+(** liste de joueur **)
+let bombers = [ ("bleu", 1, 1, "sud"); ("vert", 7, 1, "sud");("rouge", 7, 4, "sud"); ("violet", 3, 7, "sud")]
+
+let ouvrir_fenetre () =
+  init 92 72 10 10
+
+let case_to_coord i j =
+  46+(j*92), 36+(i*72)
+
+let coord_x_to_case x =
+  x/92
+let coord_y_to_case y =
+  y/72
+
+(** convertit string en couleur **)
+let couleur_of_string s = 
+  match s with
+  | "bleu" -> Bleu
+  | "rouge" -> Rouge
+  | "vert" -> Vert
+  | "violet" -> Violet
+  | _ -> assert false
+
+(** convertit couleur en string **)
+let couleur_to_string c = 
+  match c with
+  | Bleu -> "bleu"
+  | Rouge -> "rouge"
+  | Vert -> "vert"
+  | Violet -> "violet"
+
+(** convertit string en direction **)
+let dir_of_string s = 
+  match s with
+  | "sud" -> Sud
+  | "nord" -> Nord
+  | "est" -> Est
+  | "ouest" -> Ouest
+
+(** prochaine case: i j depuis: direction et coordonnées fenetre **)
+let prochaine_case x y dir =
+  match dir with
+  | Nord -> 9-coord_y_to_case (y+36), coord_x_to_case x;
+  | Sud -> 9-coord_y_to_case (y-36), coord_x_to_case x;
+  | Est -> 9-coord_y_to_case y, coord_x_to_case (x+50);
+  | Ouest -> 9-coord_y_to_case y, coord_x_to_case (x-50)
+
+(** prochaine case: i j depuis: i j **)
+let prochaine_case_ij i j dir =
+  match dir with
+  | Nord -> i, j+1;
+  | Sud -> i, j-1;
+  | Est -> i+1, j;
+  | Ouest -> i-1, j
+
+(** construction d'un bomberman depuis (string*int*int*string) **)
+let build_bomber (c, i, j, d) = 
+  Bomberman {
+    x = fst(case_to_coord i j);
+    y = snd(case_to_coord i j);
+    couleur = couleur_of_string c;
+    dir = dir_of_string d;
+    etat = Vivant;
+    pas = None} 
+
+(** construction d'un bomberman depuis (couleur*int*int*dir) **)
+let build_bomber2 (c, i , j, d) = 
+  Bomberman {
+    x = i;
+    y = j;
+    couleur = c;
+    dir = d;
+    etat = Vivant;
+    pas = None}
+
+(** construction d'une bombe **)
+let build_bomba i j d =
+  Bombe {
+    b_i = i;
+    b_j = j;
+    b_duree = d;
+  }
+
+(** affichage arene sur console **)
+let affiche_arene m l =
+  List.map (function (c,i,j,d) -> Printf.printf "%s %d %d %s\n%!" c i j d) l;
+  for i = 0 to 9 do
+    for j = 0 to 9 do
+      begin
+        match m.(i).(j) with
+        | ' ' -> Printf.printf " %!";
+        | '=' -> Printf.printf "=%!";
+        | 'x' -> Printf.printf "x%!";
+        | _ -> ();
+      end
+    done;
+    Printf.printf "\n";
+  done;
+  Printf.printf "\n"
+
+(** mise en place de l'arene au départ du jeu **)
+let dessiner_arene m l = 
+  List.map (function (c,i,j,d) -> Printf.printf "%s %d %d %s\n%!" c i j d) l;
+  for i = 0 to 9 do
+    for j = 0 to 9 do
+      begin
+        match m.(i).(j) with
+        | ' ' -> let sprite_sol = Sol (j , 9-i) in 
+          affiche_sprite sprite_sol;
+          Printf.printf " %!";
+        | '=' -> let sprite_bloc = Bloc {blk_i = j; blk_j = 9-i;  blk_forme = Incassable } in
+          affiche_sprite sprite_bloc;
+          affiche();
+          Printf.printf "=%!";
+        | 'x' -> let sprite_bloc = Bloc {blk_i = j; blk_j = 9-i; blk_forme = Cassable(Intact) } in
+          affiche_sprite sprite_bloc;
+          affiche();
+          Printf.printf "x%!";
+        | _ -> ();
+      end
+    done;
+    Printf.printf "\n";
+  done;
+  Printf.printf "\n";
+  let l = List.map build_bomber bombers in
+  List.iter affiche_sprite l;
+  affiche()
+
+(** affiche les bombes **)
+let affiche_bomba l =
+  List.map (fun x -> affiche_sprite x) l
+
+(** efface les bombes **)
+let efface_bomba l =
+  List.map (fun x -> efface_sprite x) l
+
+let maj_pos_joueur x y coul =
+  let couleur = couleur_to_string coul in
+  List.map (fun (a,b,c,d) -> if a = couleur then (a,(coord_y_to_case y), (coord_x_to_case x), "sud") else (a,b,c,d)) bombers
+
+let rec mouvement x y m joueur coul dir decr list_bombe =
+  match dir with
+  | Nord -> let proch_case = prochaine_case !x !y Nord in
+    if (m.(fst(proch_case)).(snd(proch_case)) == ' ' && !decr > 0) then 
+      begin
+        efface_sprite joueur;
+        let joueur2 = build_bomber2 (coul, !x, (!y+5), Nord) in
+        affiche_sprite joueur2;
+        affiche_bomba list_bombe;
+        affiche();
+        efface_bomba list_bombe;
+        efface_sprite joueur;
+        sleepf(1./.30.);
+        y := !y + 5;
+        decr := !decr -1;
+        mouvement x y m joueur2 coul Nord decr list_bombe;
+      end
+  | Sud -> let proch_case = prochaine_case !x !y Sud in
+    if (m.(fst(proch_case)).(snd(proch_case)) == ' ' && !decr > 0) then 
+      begin
+        efface_sprite joueur;
+        let joueur2 = build_bomber2 (coul, !x, (!y-5), Sud) in
+        affiche_sprite joueur2;
+        affiche_bomba list_bombe;
+        affiche();
+        efface_bomba list_bombe;
+        efface_sprite joueur;
+        sleepf(1./.30.);
+        y := !y - 5;
+        decr := !decr -1;
+        mouvement x y m joueur2 coul Sud decr list_bombe;
+      end
+  | Est -> let proch_case = prochaine_case !x !y Est in
+    if (m.(fst(proch_case)).(snd(proch_case)) == ' ' && !decr > 0) then 
+      begin
+        efface_sprite joueur;
+        let joueur2 = build_bomber2 (coul,(!x+5), !y, Est) in
+        affiche_sprite joueur2;
+        affiche_bomba list_bombe;
+        affiche();
+        efface_bomba list_bombe;
+        efface_sprite joueur;
+        sleepf(1./.30.);
+        x := !x + 5;
+        decr := !decr -1;
+        mouvement x y m joueur2 coul Est decr list_bombe;
+      end
+  | Ouest -> let proch_case = prochaine_case !x !y Ouest in
+    if (m.(fst(proch_case)).(snd(proch_case)) == ' ' && !decr > 0) then 
+      begin
+        efface_sprite joueur;
+        let joueur2 = build_bomber2 (coul, (!x-5), !y, Ouest) in
+        affiche_sprite joueur2;
+        affiche_bomba list_bombe;
+        affiche();
+        efface_bomba list_bombe;
+        efface_sprite joueur;
+        sleepf(1./.30.);
+        x := !x - 5;
+        decr := !decr -1;
+        mouvement x y m joueur2 coul Ouest decr list_bombe;
+      end
+
+(** ajoute la flamme à la liste **) 
+let rec flamme_dir m i j dir liste_flamme =
+  match dir with
+  | Nord -> let proch_case = prochaine_case_ij i j Nord in
+    let proch_case2 = prochaine_case_ij (fst(proch_case)) (snd(proch_case)) Nord in
+    if ((m.(fst(proch_case)).(snd(proch_case)) = ' ') && (m.(fst(proch_case2)).(snd(proch_case2)) = ' ')) then
+      begin
+        let flamme = Flamme {f_i=i;f_j=j;f_forme=FVert} in
+        let f2 = flamme :: l in
+        flamme_dir m (fst(proch_case)) (snd(proch_case)) Nord f2;f2
+      end
+    else
+    if (m.(fst(proch_case)).(snd(proch_case)) = ' ') then
+      begin
+        let flamme = Flamme {f_i=i;f_j=j;f_forme=FHaut} in
+        let f2 = flamme :: liste_flamme in
+        flamme_dir m (fst(proch_case)) (snd(proch_case)) Nord f2;Printf.printf "Nord: %d\n" (List.length f2)
+      end
+  | Sud -> let proch_case = prochaine_case_ij i j Sud in
+    let proch_case2 = prochaine_case_ij (fst(proch_case)) (snd(proch_case)) Sud in
+    if ((m.(fst(proch_case)).(snd(proch_case)) = ' ') && (m.(fst(proch_case2)).(snd(proch_case2)) = ' ')) then
+      begin
+        let flamme = Flamme {f_i=i;f_j=j;f_forme=FVert} in
+        let f2 = flamme :: liste_flamme in
+        flamme_dir m (fst(proch_case)) (snd(proch_case)) Sud f2
+      end
+    else
+    if (m.(fst(proch_case)).(snd(proch_case)) = ' ') then
+      begin
+        let flamme = Flamme {f_i=i;f_j=j;f_forme=FBas} in
+        let f2 = flamme :: liste_flamme in
+        flamme_dir m (fst(proch_case)) (snd(proch_case)) Nord f2;Printf.printf "Sud: %d\n" (List.length f2)
+      end
+  | Est -> let proch_case = prochaine_case_ij i j Est in
+    let proch_case2 = prochaine_case_ij (fst(proch_case)) (snd(proch_case)) Est in
+    if ((m.(fst(proch_case)).(snd(proch_case)) = ' ') && (m.(fst(proch_case2)).(snd(proch_case2)) = ' ')) then
+      begin
+        let flamme = Flamme {f_i=i;f_j=j;f_forme=FHoriz} in
+        let f2 = flamme :: liste_flamme in
+        flamme_dir m (fst(proch_case)) (snd(proch_case)) Est f2
+      end
+    else
+    if (m.(fst(proch_case)).(snd(proch_case)) = ' ') then
+      begin
+        let flamme = Flamme {f_i=i;f_j=j;f_forme=FDroite} in
+        let f2 = flamme :: liste_flamme in
+        flamme_dir m (fst(proch_case)) (snd(proch_case)) Nord f2;Printf.printf "Est: %d\n" (List.length f2)
+      end
+  | Ouest -> let proch_case = prochaine_case_ij i j Ouest in
+    let proch_case2 = prochaine_case_ij (fst(proch_case)) (snd(proch_case)) Ouest in
+    if ((m.(fst(proch_case)).(snd(proch_case)) = ' ') && (m.(fst(proch_case2)).(snd(proch_case2)) = ' ')) then
+      begin
+        let flamme = Flamme {f_i=i;f_j=j;f_forme=FHoriz} in
+        let f2 = flamme :: liste_flamme in
+        flamme_dir m (fst(proch_case)) (snd(proch_case)) Ouest f2
+      end
+    else
+    if (m.(fst(proch_case)).(snd(proch_case)) = ' ') then
+      begin
+        let flamme = Flamme {f_i=i;f_j=j;f_forme=FGauche} in
+        let f2 = flamme :: liste_flamme in
+        flamme_dir m (fst(proch_case)) (snd(proch_case)) Nord f2;Printf.printf "Ouest: %d\n" (List.length f2)
+      end
+
+(** affiche liste des flammes **)
+let affiche_flamme m i j =
+  let l = [Flamme {f_i=i;f_j=j;f_forme=FCroix}] in
+  let l2 = flamme_dir m i j Nord l in
+  (* let l3 = flamme_dir m i j Sud l in
+  let l4 = flamme_dir m i j Ouest l in
+  let l5 = flamme_dir m i j Est l in *)
+  List.map (fun x -> affiche_sprite x;) l;
+  affiche();
+  sleepf(1./.5.);
+  List.map (fun x -> efface_sprite x;) ;
+  affiche()
+
+(** mise a jour des bombes **)
+let maj_bomba m l =
+  List.fold_left 
+    (fun l' s -> 
+       match s with
+       | Bombe r  -> 
+         if r.b_duree > 0 then 
+           Bombe ( { r with b_duree = r.b_duree - 1 } ) :: l'
+         else 
+           begin
+             efface_sprite s;
+             affiche_flamme m r.b_i r.b_j;
+             l'
+           end
+       | _ -> s :: l' ) [] l
+
+(** controle d'un bomberman **)
+let rec controle coul m bombers bombas =
+  let sprite_bomba : (sprite list) ref = ref bombas in
+  let sprite_bomber = List.map build_bomber bombers in
+  let joueur = List.find (fun s ->  match s with | Bomberman(r) -> r.couleur = coul | _ -> false) sprite_bomber in
+  let Bomberman(r) = joueur in
+  let x = ref r.x in
+  let y = ref r.y in
+  if (not(touche_pressee())) then
+    begin
+      sleepf(1./.05.);
+      affiche_sprite joueur;
+      affiche_bomba !sprite_bomba;
+      affiche();
+      efface_bomba !sprite_bomba;
+      let bombas2 = maj_bomba m !sprite_bomba in
+      let bombers2 = maj_pos_joueur !x !y coul in
+      controle coul m bombers2 bombas2
+    end
+  else
+    begin
+      (match lecture_touche() with
+       | 'z' -> let descr = ref 15 in
+         mouvement x y m joueur coul Nord descr !sprite_bomba;
+         efface_sprite joueur;
+       | 'd' -> let descr = ref 20 in
+         mouvement x y m joueur coul Est descr !sprite_bomba;
+         efface_sprite joueur;
+       | 'q' -> let descr = ref 20 in
+         mouvement x y m joueur coul Ouest descr !sprite_bomba;
+         efface_sprite joueur;
+       | 's' -> let descr = ref 15 in
+         mouvement x y m joueur coul Sud descr !sprite_bomba;
+         efface_sprite joueur;
+       | 'b' -> let bomba = build_bomba (coord_x_to_case !x) (coord_y_to_case !y) 15 in
+         sprite_bomba :=  bomba :: !sprite_bomba;
+       | 'o' -> close_graph(Printf.printf "Fin du jeu!\n")
+       |  _  -> ()
+      );
+      affiche_bomba !sprite_bomba;
+      let bombas2 = maj_bomba m !sprite_bomba in
+      let bombers2 = maj_pos_joueur !x !y coul in
+      affiche_arene m bombers2;
+      controle coul m bombers2 bombas2
+    end
+
+let () =
+  auto_synchronize false;
+  ouvrir_fenetre();
+  dessiner_arene grille bombers;
+  controle Rouge grille bombers [];
+  ignore (read_key ())
