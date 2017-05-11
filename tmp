@@ -120,7 +120,7 @@ let affiche_arene m l =
 
 (** mise en place de l'arene au départ du jeu **)
 let dessiner_arene m l = 
-  List.map (function (c,i,j,d) -> Printf.printf "%s %d %d %s\n%!" c i j d) l;
+  List.iter (function (c,i,j,d) -> Printf.printf "%s %d %d %s\n%!" c i j d) l;
   for i = 0 to 9 do
     for j = 0 to 9 do
       begin
@@ -148,11 +148,11 @@ let dessiner_arene m l =
 
 (** affiche les bombes **)
 let affiche_bomba l =
-  List.map (fun x -> affiche_sprite x) l
+  List.iter (fun x -> affiche_sprite x) l
 
 (** efface les bombes **)
 let efface_bomba l =
-  List.map (fun x -> efface_sprite x) l
+  List.iter (fun x -> efface_sprite x) l
 
 let maj_pos_joueur x y coul =
   let couleur = couleur_to_string coul in
@@ -224,10 +224,10 @@ let rec mouvement x y m joueur coul dir decr list_bombe =
 (** ajoute la flamme à la liste **) 
 let rec flamme_dir m i j dir liste_flamme =
   let (pcx, pcy) = prochaine_case_ij i j dir in
-  if m.(pcx).(pcy) <> ' ' then liste_flamme
+  if m.(9-(pcy)).(pcx) <> ' ' then liste_flamme
   else
     let (pcx2, pcy2) = prochaine_case_ij pcx pcy dir in
-    if m.(pcx2).(pcy2) = ' ' then 
+    if m.(9-(pcy2)).(pcx2) = ' ' then 
       begin
         let f = match dir with
           | Nord | Sud -> FVert
@@ -257,7 +257,7 @@ let affiche_flamme m i j =
   let l5 = flamme_dir m i j Ouest l4 in
   List.map (fun x -> affiche_sprite x;) l5;
   affiche();
-  sleepf(1./.05.);
+  sleepf(1./.10.);
   List.map (fun x -> efface_sprite x;) l5;
   affiche()
 
