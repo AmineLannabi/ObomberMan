@@ -55,7 +55,7 @@ let dir_of_string s =
   | "nord" -> Nord
   | "est" -> Est
   | "ouest" -> Ouest
-    | _ -> assert false
+  | _ -> assert false
 
 (** prochaine case: i j depuis: direction et coordonnées fenetre **)
 let prochaine_case x y dir =
@@ -221,9 +221,22 @@ let rec mouvement x y m joueur coul dir decr list_bombe =
         mouvement x y m joueur2 coul Ouest decr list_bombe;
       end
 
+(** mise à jour grille **)
+let maj_grille m i j =
+  m.(i).(j) <- ' ';
+  let s = Sol (j, (9-i)) in
+  affiche_sprite s;
+  m
+
 (** ajoute la flamme à la liste **) 
 let rec flamme_dir m i j dir liste_flamme =
   let (pcx, pcy) = prochaine_case_ij i j dir in
+  if m.(9-(pcy)).(pcx) = 'x' then 
+    begin
+      maj_grille m (9-(pcy)) pcx;
+      liste_flamme
+    end
+  else 
   if m.(9-(pcy)).(pcx) <> ' ' then liste_flamme
   else
     let (pcx2, pcy2) = prochaine_case_ij pcx pcy dir in
@@ -255,10 +268,10 @@ let affiche_flamme m i j =
   let l3 = flamme_dir m i j Sud l2 in
   let l4 = flamme_dir m i j Est l3 in
   let l5 = flamme_dir m i j Ouest l4 in
-  List.map (fun x -> affiche_sprite x;) l5;
+  List.iter (fun x -> affiche_sprite x;) l5;
   affiche();
   sleepf(1./.10.);
-  List.map (fun x -> efface_sprite x;) l5;
+  List.iter (fun x -> efface_sprite x;) l5;
   affiche()
 
 (** mise a jour des bombes **)
@@ -327,5 +340,4 @@ let () =
   auto_synchronize false;
   ouvrir_fenetre();
   dessiner_arene grille bombers;
-  controle Rouge grille bombers [];
-  ignore (read_key ())
+  controle Rouge grille bombers []
