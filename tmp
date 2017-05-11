@@ -55,6 +55,7 @@ let dir_of_string s =
   | "nord" -> Nord
   | "est" -> Est
   | "ouest" -> Ouest
+    | _ -> assert false
 
 (** prochaine case: i j depuis: direction et coordonnées fenetre **)
 let prochaine_case x y dir =
@@ -67,10 +68,10 @@ let prochaine_case x y dir =
 (** prochaine case: i j depuis: i j **)
 let prochaine_case_ij i j dir =
   match dir with
-  | Nord -> i-1, j;
-  | Sud -> i+1, j;
-  | Est -> i, j-1;
-  | Ouest -> i, j+1
+  | Nord -> i, (j+1);
+  | Sud -> i, (j-1);
+  | Est -> (i+1), j;
+  | Ouest -> (i-1), j
 
 (** construction d'un bomberman depuis (string*int*int*string) **)
 let build_bomber (c, i, j, d) = 
@@ -102,7 +103,7 @@ let build_bomba i j d =
 
 (** affichage arene sur console **)
 let affiche_arene m l =
-  List.map (function (c,i,j,d) -> Printf.printf "%s %d %d %s\n%!" c i j d) l;
+  List.iter (function (c,i,j,d) -> Printf.printf "%s %d %d %s\n%!" c i j d) l;
   for i = 0 to 9 do
     for j = 0 to 9 do
       begin
@@ -220,8 +221,48 @@ let rec mouvement x y m joueur coul dir decr list_bombe =
         mouvement x y m joueur2 coul Ouest decr list_bombe;
       end
 
+(** ajoute la flamme à la liste **) 
+let rec flamme_dir m i j dir liste_flamme =
+  let (pcx, pcy) = prochaine_case_ij i j dir in
+  if m.(pcx).(pcy) <> ' ' then liste_flamme
+  else
+    let (pcx2, pcy2) = prochaine_case_ij pcx pcy dir in
+    if m.(pcx2).(pcy2) = ' ' then 
+      begin
+        let f = match dir with
+          | Nord | Sud -> FVert
+          | Est | Ouest-> FHoriz
+        in
+        let f = Flamme {f_i=pcx;f_j=pcy;f_forme=f}in
+        flamme_dir m pcx pcy dir (f::liste_flamme)
+      end
+    else
+      begin
+        let f = match dir with
+          | Nord -> FHaut
+          | Sud -> FBas
+          | Est -> FDroite
+          | Ouest -> FGauche
+        in
+        let f = Flamme {f_i=pcx;f_j=pcy;f_forme=f} in
+        flamme_dir m pcx pcy dir (f::liste_flamme)
+      end
+
+(** affiche liste des flammes **)
+let affiche_flamme m i j =
+  let l = [Flamme {f_i=i;f_j=j;f_forme=FCroix}] in
+  let l2 = flamme_dir m i j Nord l in
+  let l3 = flamme_dir m i j Sud l2 in
+  let l4 = flamme_dir m i j Est l3 in
+  let l5 = flamme_dir m i j Ouest l4 in
+  List.map (fun x -> affiche_sprite x;) l5;
+  affiche();
+  sleepf(1./.05.);
+  List.map (fun x -> efface_sprite x;) l5;
+  affiche()
+
 (** mise a jour des bombes **)
-let maj_bomba l =
+let maj_bomba m l =
   List.fold_left 
     (fun l' s -> 
        match s with
@@ -231,10 +272,10 @@ let maj_bomba l =
          else 
            begin
              efface_sprite s;
+             affiche_flamme m r.b_i r.b_j;
              l'
            end
        | _ -> s :: l' ) [] l
-
 
 (** controle d'un bomberman **)
 let rec controle coul m bombers bombas =
@@ -246,37 +287,37 @@ let rec controle coul m bombers bombas =
   let y = ref r.y in
   if (not(touche_pressee())) then
     begin
-      if (bombas != []) then
-        sleepf(1./.05.);
+      sleepf(1./.05.);
       affiche_sprite joueur;
       affiche_bomba !sprite_bomba;
       affiche();
       efface_bomba !sprite_bomba;
-      let bombas2 = maj_bomba !sprite_bomba in
+      let bombas2 = maj_bomba m !sprite_bomba in
       let bombers2 = maj_pos_joueur !x !y coul in
-      affiche_arene m bombers2;
       controle coul m bombers2 bombas2
     end
   else
     begin
       (match lecture_touche() with
        | 'z' -> let descr = ref 15 in
-         mouvement x y m joueur coul Nord descr !sprite_bomba
+         mouvement x y m joueur coul Nord descr !sprite_bomba;
+         efface_sprite joueur;
        | 'd' -> let descr = ref 20 in
-         mouvement x y m joueur coul Est descr !sprite_bomba
+         mouvement x y m joueur coul Est descr !sprite_bomba;
+         efface_sprite joueur;
        | 'q' -> let descr = ref 20 in
-         mouvement x y m joueur coul Ouest descr !sprite_bomba
+         mouvement x y m joueur coul Ouest descr !sprite_bomba;
+         efface_sprite joueur;
        | 's' -> let descr = ref 15 in
-         mouvement x y m joueur coul Sud descr !sprite_bomba
+         mouvement x y m joueur coul Sud descr !sprite_bomba;
+         efface_sprite joueur;
        | 'b' -> let bomba = build_bomba (coord_x_to_case !x) (coord_y_to_case !y) 15 in
          sprite_bomba :=  bomba :: !sprite_bomba;
        | 'o' -> close_graph(Printf.printf "Fin du jeu!\n")
        |  _  -> ()
       );
-      efface_sprite joueur;
-      affiche();
       affiche_bomba !sprite_bomba;
-      let bombas2 = maj_bomba !sprite_bomba in
+      let bombas2 = maj_bomba m !sprite_bomba in
       let bombers2 = maj_pos_joueur !x !y coul in
       affiche_arene m bombers2;
       controle coul m bombers2 bombas2
